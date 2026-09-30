@@ -69,19 +69,36 @@ all of these.
 
 ## Submitting a pack
 
-1. **Build and release.** In your pack's repo, run
+1. **Tag the version.** Commit your pack, then tag it and push the tag:
 
    ```bash
    npx @omniship-labs/eyeread.in-packs validate
-   npx @omniship-labs/eyeread.in-packs build
+   git tag v1.2.0
+   git push origin v1.2.0
    ```
 
-   Publish a release for the version's tag and attach the zip `build` wrote.
-   Note the pack hash `build` printed.
+2. **Submit it.** With the [GitHub CLI](https://cli.github.com) logged in, run
+   this in the pack's folder:
 
-2. **Open a pull request** here adding
-   `packs/<id>/<version>/entry.json`. One version per pull request. Don't add
+   ```bash
+   npx @omniship-labs/eyeread.in-packs submit --release
+   ```
+
+   `--release` creates the GitHub release for the tag with the zip attached.
+   Leave it off if you've already attached the zip `build` wrote. `submit`
+   checks the released zip matches your folder at the tag, fills in
+   `entry.json`, and opens the pull request here from a fork. You don't need
+   any access to this repo.
+
+   Zip hosted somewhere other than GitHub releases? Add `--url <zip url>`.
+   Without the GitHub CLI, or with `--dry-run`, `submit` prints the
+   `entry.json` and a link that opens GitHub with the file filled in.
+
+   **By hand:** add `packs/<id>/<version>/entry.json` in a pull request (see
+   [the format](#entryjson)). One version per pull request. Don't add
    `files.json.minisig`; maintainers add that.
+
+   Your first pull request here waits for a maintainer to approve its CI run.
 
 3. **CI checks it** (below) and comments on the pull request. Fix anything it
    reports by pushing to the same pull request.

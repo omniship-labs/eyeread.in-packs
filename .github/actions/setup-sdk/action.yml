@@ -8,7 +8,7 @@ description: Check out omniship-labs/eyeread.in-packs-sdk at a pinned commit.
 inputs:
   ref:
     description: SDK commit to use
-    default: 91852a10d2e57c06c1d9486f1fee53eb2da85b77
+    default: e73f5c83524972b3e97979eb0c6133d212a0063f
   path:
     description: Where to check it out
     default: .sdk
