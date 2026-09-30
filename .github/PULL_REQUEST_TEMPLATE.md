@@ -1,6 +1,7 @@
 <!--
-Submitting a pack version? Add only packs/<id>/<version>/entry.json, one
-version per pull request. See README.md for the format and the zip URL rules.
+Submitting a pack version? `npx @omniship-labs/eyeread.in-packs submit` opens
+this pull request for you. By hand: add only packs/<id>/<version>/entry.json,
+one version per pull request. See README.md for the format and the zip URL rules.
 -->
 
 ## Pack
