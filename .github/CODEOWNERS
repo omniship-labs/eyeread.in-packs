@@ -1,0 +1,4 @@
+# Code owners: review is required on these paths before merge.
+# Signatures and withdrawals come only from maintainers who hold the signing key.
+*                          @mhalinge
+/packs/**/files.json.minisig @mhalinge

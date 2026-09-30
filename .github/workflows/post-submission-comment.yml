@@ -1,0 +1,51 @@
+# Post the submission check's result on the pull request.
+#
+# Fork PRs get a read-only token in check-submission.yml, so that run saves
+# the comment as an artifact and this one, triggered by workflow_run on the
+# base branch, posts it. The artifact comes from an untrusted run: the PR
+# number is only used if it's an open PR whose head is the run's commit.
+name: Post submission comment
+
+on:
+  workflow_run:
+    workflows: [Check submission]
+    types: [completed]
+
+permissions:
+  actions: read
+  pull-requests: write
+
+jobs:
+  post:
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: submission-comment
+          path: comment
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Find the pull request
+        id: pr
+        run: |
+          number=$(tr -dc '0-9' < comment/pr-number)
+          head=$(gh api "repos/$REPO/pulls/$number" --jq '.state + " " + .head.sha')
+          if [ "$head" != "open $HEAD_SHA" ]; then
+            echo "PR #$number isn't open at $HEAD_SHA; not posting." >&2
+            exit 1
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+
+      - if: hashFiles('comment/pr-comment.md') != ''
+        uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+        with:
+          header: pack-submission
+          path: comment/pr-comment.md
+          number: ${{ steps.pr.outputs.number }}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/omniship-labs/eyeread.in-packs/blob/main/schema/entry.schema.json",
+  "title": "eyeread.in pack entry",
+  "description": "One reviewed version of a pack: where its source and zip live, and the pack hash OmniShip signs. Stored at packs/<id>/<version>/entry.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["repo", "tag", "commit", "path", "url", "packHash"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "repo": {
+      "description": "The pack's public git repository, as an https:// URL that `git clone` accepts.",
+      "type": "string",
+      "pattern": "^https://[^/@\\s]+/[^\\s]+$",
+      "maxLength": 300
+    },
+    "tag": {
+      "description": "The release tag for this version, for example v1.2.0.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "pattern": "^[^\\s~^:?*\\[\\\\]+$"
+    },
+    "commit": {
+      "description": "The full commit SHA the tag points to.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "path": {
+      "description": "The pack folder inside the repo: \".\" for the repo root, or a relative path such as \"packs/notion-sync\".",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "^(\\.|(?!\\.\\.?(/|$))[A-Za-z0-9._-]+(/(?!\\.\\.?(/|$))[A-Za-z0-9._-]+)*)$"
+    },
+    "url": {
+      "description": "Where the app downloads the zip. https://, public, and never changes.",
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://",
+      "maxLength": 500
+    },
+    "mirrors": {
+      "description": "Other URLs serving the same zip. Any one serving the right pack hash keeps the pack reachable.",
+      "type": "array",
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "type": "string", "format": "uri", "pattern": "^https://", "maxLength": 500 }
+    },
+    "packHash": {
+      "description": "The pack hash `eyeread.in-packs build` prints: SHA-256 of the canonical files.json.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "withdrawn": {
+      "description": "Set by a maintainer when this version is withdrawn. The daily check skips it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["date", "reason"],
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 200 }
+      }
+    }
+  }
+}
