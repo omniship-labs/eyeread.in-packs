@@ -1,0 +1,71 @@
+# Check the pack versions a pull request adds (README.md, "What CI checks").
+#
+# Runs on pull_request, so fork PRs get a read-only token and no secrets. The
+# scripts come from the base branch and only the PR's packs/ folder is read,
+# so a PR can't change the checks it's judged by. The comment is posted by
+# post-submission-comment.yml, which has write access.
+name: Check submission
+
+on:
+  pull_request:
+    paths:
+      - 'packs/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the base branch (scripts)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Check out the pull request (entries)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: pr
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      - uses: ./.github/actions/setup-sdk
+
+      - name: Check new pack versions
+        run: |
+          mkdir -p comment
+          node scripts/check-submission.mjs --pr pr --base "$BASE_SHA" --out comment/pr-comment.md
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+
+      - name: Save the comment
+        if: always()
+        run: |
+          mkdir -p comment
+          echo "$PR_NUMBER" > comment/pr-number
+          echo "$HEAD_SHA" > comment/head-sha
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: submission-comment
+          path: comment/
+          retention-days: 7

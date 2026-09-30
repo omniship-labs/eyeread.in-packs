@@ -1,0 +1,32 @@
+# Check out the packs SDK at a pinned commit and install its dependencies, so
+# CI validates and builds packs with exactly the code creators run. Point
+# SDK_DIR at the result. Bump `ref` to pick up SDK changes; switch to the
+# npm package once @omniship-labs/eyeread.in-packs is published.
+name: Set up the packs SDK
+description: Check out omniship-labs/eyeread.in-packs-sdk at a pinned commit.
+
+inputs:
+  ref:
+    description: SDK commit to use
+    default: 91852a10d2e57c06c1d9486f1fee53eb2da85b77
+  path:
+    description: Where to check it out
+    default: .sdk
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        repository: omniship-labs/eyeread.in-packs-sdk
+        ref: ${{ inputs.ref }}
+        path: ${{ inputs.path }}
+        persist-credentials: false
+    - shell: bash
+      # The CLI reads its spec from a vendored copy the SDK's build step writes.
+      run: |
+        npm ci --ignore-scripts --workspace @omniship-labs/eyeread.in-packs
+        node scripts/copy-spec.js
+      working-directory: ${{ inputs.path }}
+    - shell: bash
+      run: echo "SDK_DIR=$GITHUB_WORKSPACE/${{ inputs.path }}" >> "$GITHUB_ENV"

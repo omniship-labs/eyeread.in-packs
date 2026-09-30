@@ -1,0 +1,47 @@
+# The daily reachability check (README.md, "Staying Verified"): every
+# Verified version must still download with the right pack hash, and its tag
+# and commit must still exist. Failures are tracked as issues labelled
+# `reachability`; ones to withdraw also get `withdraw`. CI never signs, so
+# a maintainer does the withdrawal.
+name: Reachability
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: reachability
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      - uses: ./.github/actions/setup-sdk
+
+      - name: Make sure the labels exist
+        run: |
+          gh label create reachability --color FBCA04 --description "Failing the daily reachability check" --force
+          gh label create withdraw --color B60205 --description "Verified version to withdraw" --force
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - run: node scripts/reachability.mjs --issues
+        env:
+          GH_TOKEN: ${{ github.token }}
