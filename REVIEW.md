@@ -44,12 +44,37 @@ Read all of it. Most packs are one small `main.js`.
       [Terms of Use](https://github.com/omniship-labs/eyeread.in/blob/main/TERMS.md).
 - [ ] **Bundles:** every included pack passes this list too.
 
+## Packs that read input (`input`)
+
+Also applies to any pack in a bundle. The installer already limits input in a
+pack that can reach the internet (at most 8 keys, 3 buttons, no wheel or pointer
+position, focused only) and keeps input handlers away from `scripts:write`,
+`prompter:load` and `files:import`. Review covers what it can't see. _(Policy 12)_
+
+- [ ] **Input only drives the prompter.** Key or button events turn into play,
+      pause, or moving through the script, and nothing else.
+- [ ] **Nothing is encoded.** Input never becomes a seek or advance amount that
+      doesn't follow from the script, a setting, or a log line. `advance(1)` on
+      a key is fine; an amount computed from which key it was is not.
+- [ ] **No relays.** The pack doesn't write state that another pack is built to
+      read and send out, and doesn't read state another pack writes.
+- [ ] **Only the inputs it needs.** `keys` or `buttons` list what the pack uses
+      and the description names them. Wheel, pointer position and global scope
+      are justified in the description.
+- [ ] **With internet:** the keys are needed for what the description says, and
+      the description says what is sent to each site. A narrow list that is
+      still bigger than the pack needs is a reason to ask for changes.
+- [ ] **No recording.** Input isn't stored, buffered or logged beyond what
+      driving the prompter needs.
+
 ## Updates to a Verified pack
 
 Review the diff CI posts and the linked source diff, not the whole pack.
 
 - [ ] Every **new permission** and **new network site** is justified by the
       description, and the description is updated to match.
+- [ ] Any new `input`, wider `keys` or `buttons`, wheel, global scope or
+      pointer position is justified, and the input checks above still hold.
 - [ ] Changed manifest fields (name, author, description, pricing, settings)
       still pass the identity, trademark and paid-feature checks above.
 - [ ] Changed and added code passes the readable-code, network, tracking and
